@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:rabbit="http://www.springframework.org/schema/rabbit"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       https://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/rabbit
+       http://www.springframework.org/schema/rabbit/spring-rabbit.xsd">
+    <!--加载配置文件-->
+    <context:property-placeholder location="classpath:rabbitmq.properties"/>
+
+    <!-- 定义rabbitmq connectionFactory -->
+    <rabbit:connection-factory id="connectionFactory" host="${rabbitmq.host}"
+                               port="${rabbitmq.port}"
+                               username="${rabbitmq.username}"
+                               password="${rabbitmq.password}"
+                               virtual-host="${rabbitmq.virtual-host}"/>
+
+    <!-- 对应的监听类 -->
+    <!-- 简单模式 -->
+    <bean id="queueListener" class="com.echo.spring.rm.HelloWorld_QueueListener"/>
+
+    <!-- 订阅模式 -->
+    <bean id="fanoutListener1" class="com.echo.spring.rm.PubSub01_QueueListener"/>
+    <bean id="fanoutListener2" class="com.echo.spring.rm.PubSub02_QueueListener"/>
+
+    <!-- 路由模式 -->
+    <bean id="routingListener01" class="com.echo.spring.rm.Routing01_QueueListener"/>
+    <bean id="routingListener02" class="com.echo.spring.rm.Routing02_QueueListener"/>
+
+    <!-- 主题模式 -->
+    <bean id="topicListener01" class="com.echo.spring.rm.Topic01_QueueListener"/>
+    <bean id="topicListener02" class="com.echo.spring.rm.Topic02_QueueListener"/>
+
+
+    <!-- 监听容器 -->
+    <rabbit:listener-container connection-factory="connectionFactory" auto-declare="true">
+        <!-- ref 指向指定的监听类，queue-names 指向指定的队列 -->
+        <!-- HelloWorld -->
+        <rabbit:listener ref="queueListener" queue-names="spring_hello_world_queue"/>
+
+        <!-- Pubsub -->
+        <rabbit:listener ref="fanoutListener1" queue-names="spring_fanout_queue_1"/>
+        <rabbit:listener ref="fanoutListener2" queue-names="spring_fanout_queue_2"/>
+
+        <!-- 路由模式 -->
+        <rabbit:listener ref="routingListener01" queue-names="spring_direct_queue_1"/>
+        <rabbit:listener ref="routingListener02" queue-names="spring_direct_queue_2"/>
+
+        <!-- 主题模式 -->
+        <rabbit:listener ref="topicListener01" queue-names="spring_topic_queue_1"/>
+        <rabbit:listener ref="topicListener02" queue-names="spring_topic_queue_2"/>
+    </rabbit:listener-container>
+</beans>
