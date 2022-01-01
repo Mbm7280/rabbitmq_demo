@@ -5,3 +5,9 @@ spring:
     username: echo
     password: echo
     virtual-host: /echo
+    # 设置消费者的Ack为手动处理
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
+

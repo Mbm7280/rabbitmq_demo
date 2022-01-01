@@ -5,3 +5,7 @@ spring:
     username: echo
     password: echo
     virtual-host: /echo
+    #  开启消息的confirm机制
+    publisher-confirms: true
+    # 开启 退回模式
+    publisher-returns: true

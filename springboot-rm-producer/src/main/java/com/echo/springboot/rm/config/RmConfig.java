@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * @className RmConfig
@@ -17,6 +20,40 @@ import org.springframework.context.annotation.Configuration;
 public class RmConfig {
     public static final String EXCHANGE_NAME = "springboot_topic_exchange";
     public static final String QUEUE_NAME = "springboot_topic_queue";
+
+
+    public static final String TTL_EXCHANGE_NAME = "springboot_ttl_exchange";
+    public static final String TTL_QUEUE_NAME = "springboot_ttl_queue";
+
+    /**
+     * @author Echo
+     * TTL交换机
+     */
+    @Bean("SpringBootTTLExchange")
+    public Exchange TTLExchange(){
+        return ExchangeBuilder.topicExchange(TTL_EXCHANGE_NAME).durable(true).build();
+    }
+
+    /**
+     * @author Echo
+     * TTL队列
+     */
+    @Bean("SpringBootTTLQueue")
+    public Queue TTLQueue() {
+        Map<String,Object> map = new HashMap<>();
+        // 设置队列的过期时间
+        map.put("x-message-ttl",10000);
+        return QueueBuilder.durable(TTL_QUEUE_NAME).withArguments(map).build();
+    }
+
+    /**
+     * @author Echo
+     * 定队列和交换机
+     */
+    @Bean
+    public Binding bindTTLQueueTOExchange(@Qualifier("SpringBootTTLQueue") Queue queue, @Qualifier("SpringBootTTLExchange") Exchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with("ttl.#").noargs();
+    }
 
     /**
      * @methodName TopicExchange
