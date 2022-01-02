@@ -18,12 +18,89 @@ import java.util.Map;
  */
 @Configuration
 public class RmConfig {
+    // TOPIC
     public static final String EXCHANGE_NAME = "springboot_topic_exchange";
     public static final String QUEUE_NAME = "springboot_topic_queue";
 
-
+    // TTL
     public static final String TTL_EXCHANGE_NAME = "springboot_ttl_exchange";
     public static final String TTL_QUEUE_NAME = "springboot_ttl_queue";
+
+    // DLX
+    // 先定义正常的队列和交换机
+    public static final String TEST_DLX_EXCHANGE_NAME = "test_dlx_exchange";
+    public static final String TEST_DLX_QUEUE_NAME = "test_dlx_queue";
+    // 定义死信队列
+    public static final String DLX_EXCHANGE_NAME = "dlx_exchange";
+    public static final String DLX_QUEUE_NAME = "dlx_queue";
+
+// ------------------------------------------------------DLX---------------------------------------------------------------
+
+    /**
+     * @author Echo
+     * 死信队列的交换机
+     */
+    @Bean("SpringBootDLXExchange")
+    public Exchange DLXExchange(){
+        return ExchangeBuilder.topicExchange(DLX_EXCHANGE_NAME).durable(true).build();
+    }
+
+    /**
+     * @author Echo
+     * 死信队列的队列
+     */
+    @Bean("SpringBootDLXQueue")
+    public Queue DLXQueue() {
+        return QueueBuilder.durable(DLX_QUEUE_NAME).build();
+    }
+
+    /**
+     * @author Echo
+     * 绑定死信队列和交换机
+     */
+    @Bean
+    public Binding bindDLXQueueTOExchange(@Qualifier("SpringBootDLXQueue") Queue queue, @Qualifier("SpringBootDLXExchange") Exchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with("dlx.#").noargs();
+    }
+
+
+    /**
+     * @author Echo
+     * 正常的交换机
+     */
+    @Bean("SpringBootDLXTestExchange")
+    public Exchange DLXTestExchange(){
+        return ExchangeBuilder.topicExchange(TEST_DLX_EXCHANGE_NAME).durable(true).build();
+    }
+
+    /**
+     * @author Echo
+     * 正常的队列
+     */
+    @Bean("SpringBootDLXTestQueue")
+    public Queue DLXTestQueue() {
+        Map<String,Object> map = new HashMap<>();
+        // 设置队列的过期时间
+        map.put("x-message-ttl",10000);
+        // 设置队列的长度限制
+        map.put("x-max-length",10);
+        // x-dead-letter-exchange：死信交换机名称
+        map.put("x-dead-letter-exchange",DLX_EXCHANGE_NAME);
+        // x-dead-letter-routing-key：发送给死信交换机的routingkey
+        map.put("x-dead-letter-routing-key","dlx.hello");
+        return QueueBuilder.durable(TEST_DLX_QUEUE_NAME).withArguments(map).build();
+    }
+
+    /**
+     * @author Echo
+     * 绑定队列和交换机
+     */
+    @Bean
+    public Binding bindDLXTestQueueTOExchange(@Qualifier("SpringBootDLXTestQueue") Queue queue, @Qualifier("SpringBootDLXTestExchange") Exchange exchange){
+        return BindingBuilder.bind(queue).to(exchange).with("test.dlx.#").noargs();
+    }
+
+//  --------------------------------------------------------------------------------------------------------------------
 
     /**
      * @author Echo
